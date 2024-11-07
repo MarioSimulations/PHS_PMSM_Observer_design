@@ -2,16 +2,6 @@ import numpy as np
 from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
 
-# To Make Plots Look Like Latex
-
-# plt.rcParams.update({
-#   "text.usetex": True,
-#   "font.family": "sans-serif",
-#   "font.sans-serif": ["Helvetica"]
-# })
-
-enableSave = True
-
 class Parameters:
     def __init__(self):   
         # The stator windings are actually unbalanced
@@ -88,8 +78,7 @@ def obs(xhat, u, y, params):
     y_hat = params.G.T.dot(params.Q.dot(xhat))
     #Dynamics
     xhatdot = (J_x - params.R ).dot(params.Q.dot(xhat)) + params.G.dot(u) + params.gamma*params.G.dot(y-y_hat)
-
-    # xhatdot = (J_x - params.R - params.gamma*params.G.dot(params.G.T)).dot(params.Q.dot(xhat)) + params.G.dot(u) + params.gamma*params.G.dot(y)
+    
     return xhatdot 
 
 
@@ -101,21 +90,10 @@ def sat(x,L):
         return L*np.sign(x)
     
 
-# #State feedback Control law 
-# def ControlLaw(x, params):
-#     x_1        = x[0]
-#     x_2        = x[1]
-#     rho        = params.rho
-#     #Control Law definition
-#     xsat       = np.array([sat(x_1,rho),sat(x_2,rho)])
-#     K          = params.K
-#     return -K.dot(xsat)
-
-#Closed Loop dynamics
+#Total dynamics
 def odefun(t, xCL, params):
     # Order of the system
-    # n_x+n_xhat
-    
+    # n_x+n_xhat    
     n_x     = 3
     n_xhat  = 3
 
@@ -123,9 +101,8 @@ def odefun(t, xCL, params):
     xhat    = xCL[n_x          : n_x + n_xhat]
 
 
-    #Controller definition
-    u = np.array([-4*np.cos(10*t),3*np.cos(3*t)]) # ControlLaw(xhat, params)
-    # u = np.array([-4,3]) # ControlLaw(xhat, params)
+    #Input Signal definition
+    u = np.array([-4*np.cos(10*t),3*np.cos(3*t)]) 
 
     #Output definition
     y = params.G.T.dot(params.Q.dot(x))
@@ -141,7 +118,6 @@ def odefun(t, xCL, params):
 params = Parameters()
 # Initial condition
 xcl_0 = np.concatenate([params.x0, params.xhat0])
-#print(np.zeros((2,1)))
 
 print(params.gamma)
 
@@ -161,13 +137,9 @@ phi_d_tilde  = xhat[0,:] - x[0,:]
 phi_q_tilde  = xhat[1,:] - x[1,:]
 omega_tilde  = omega_hat - omega
 
-# print(phi_d_tilde[10**3*params.tf-1])
-# print(phi_q_tilde[10**3*params.tf-1])
-# print(omega_tilde[10**3*params.tf-1])
-
-
 y_tilde      = params.G.T.dot(xhat-x)
 
+#Plotting the state evolution
 fig = plt.figure()
 plt.plot( t,     x[0,:],           color='red',     label = r'$\varphi_D(t) $')
 plt.plot( t,     x[1,:],      color='darkblue',     label = r'$\varphi_Q(t) $')
@@ -179,27 +151,10 @@ plt.title(r'Real and estimated states')
 plt.xlim((0,params.tf))
 plt.grid()
 
-if enableSave:
-    import tikzplotlib
-    tikzplotlib.save("/home/mario/Documents/LATEX/images/PMSM_states_u_cos.tex")
-else:
-    plt.legend(loc='upper right')
+plt.legend(loc='upper right')
 
 
-# fig = plt.figure()
-# plt.plot( t,     -4*np.cos(10*t),  color='red', label = r'$v_d(t) $')
-# plt.plot( t,       3*np.cos(3*t), color='blue', label = r'$v_q(t) $')
-# plt.title(r'Input $u(t)$')
-# plt.xlim((0,params.tf))
-# plt.grid()
-
-# if enableSave:
-#     import tikzplotlib
-#     tikzplotlib.save("/home/mario/Documents/LATEX/images/PMSM_u_cost.tex")
-# else:
-#     plt.legend(loc='upper right')
-
-
+#Plotting the estimation error evolution
 fig = plt.figure()
 plt.plot( t,     phi_d_tilde, color='red', label = r'$\tilde \varphi_D(t) $')
 plt.plot( t,     phi_q_tilde,  color='darkblue', label = r'$\tilde \varphi_Q(t) $')
@@ -208,11 +163,6 @@ plt.title(r'Error evolution')
 plt.xlim((0,params.tf))
 plt.grid()
 
-if enableSave:
-    import tikzplotlib
-    # tikzplotlib.save("/home/mario/Documents/LATEX/images/PMSM_error_states_u_cost.tex")
-else:
-    plt.legend(loc='upper right')
+plt.legend(loc='upper right')
 
-if enableSave==False:
-    plt.show()
+plt.show()
